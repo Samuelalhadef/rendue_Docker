@@ -1,7 +1,28 @@
-from flask import Flask, jsonify
+from flask import Flask, jsonify, request
 import datetime
+import os
+from dotenv import load_dotenv
+from werkzeug.security import generate_password_hash, check_password_hash
+from pymongo import MongoClient
+
+load_dotenv()
 
 app = Flask(__name__)
+app.config['SECRET_KEY'] = os.environ.get('SECRET_KEY', 'change_this_secret')
+
+# MongoDB connection
+MONGO_URI = os.environ.get('MONGO_URI', 'mongodb://mongodb:27017')
+MONGO_DB = os.environ.get('MONGO_DB', 'hoteldb')
+
+try:
+    mongo_client = MongoClient(MONGO_URI)
+    db = mongo_client[MONGO_DB]
+    users_col = db.users
+except Exception:
+    mongo_client = None
+    db = None
+    users_col = None
+
 
 @app.route('/')
 def home():
@@ -16,9 +37,12 @@ def home():
             '/hello - Accueil de la réception',
             '/info - Informations sur l\'hôtel',
             '/rooms - Voir les chambres disponibles',
-            '/services - Services de l\'hôtel'
+            '/services - Services de l\'hôtel',
+            '/register - Enregistrer un utilisateur (POST)',
+            '/login - Authentifier un utilisateur (POST)'
         ]
     })
+
 
 @app.route('/hello')
 def hello():
@@ -32,6 +56,7 @@ def hello():
         'timestamp': datetime.datetime.now().isoformat(),
         'note': 'Vous avez été dirigé ici par notre réceptionniste Nginx depuis la route /api/'
     })
+
 
 @app.route('/info')
 def info():
@@ -58,7 +83,9 @@ def info():
             '/hello - Accueil personnalisé',
             '/info - Informations complètes',
             '/rooms - Chambres disponibles',
-            '/services - Liste des services'
+            '/services - Liste des services',
+            '/register - Enregistrer un utilisateur (POST)',
+            '/login - Authentifier un utilisateur (POST)'
         ],
         'technologie': {
             'conteneur': 'Docker',
@@ -66,6 +93,7 @@ def info():
             'reseau': 'app-network bridge'
         }
     })
+
 
 @app.route('/rooms')
 def rooms():
@@ -95,6 +123,7 @@ def rooms():
         'timestamp': datetime.datetime.now().isoformat()
     })
 
+
 @app.route('/services')
 def services():
     return jsonify({
@@ -110,6 +139,68 @@ def services():
         'note': 'Tous les services sont inclus dans votre conteneur Docker',
         'timestamp': datetime.datetime.now().isoformat()
     })
+
+
+# --------------------
+# User management (MongoDB)
+# --------------------
+
+
+@app.route('/register', methods=['POST'])
+def register():
+    if users_col is None:
+        return jsonify({'error': 'Database not available'}), 500
+    data = request.get_json() or {}
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({'error': 'username and password required'}), 400
+    if users_col.find_one({'username': username}):
+        return jsonify({'error': 'user already exists'}), 409
+    pw_hash = generate_password_hash(password)
+    user = {
+        'username': username,
+        'password': pw_hash,
+        'created_at': datetime.datetime.utcnow().isoformat()
+    }
+    users_col.insert_one(user)
+    return jsonify({'message': 'user registered', 'username': username}), 201
+
+
+@app.route('/login', methods=['POST'])
+def login():
+    if users_col is None:
+        return jsonify({'error': 'Database not available'}), 500
+    data = request.get_json() or {}
+    username = data.get('username')
+    password = data.get('password')
+    if not username or not password:
+        return jsonify({'error': 'username and password required'}), 400
+    user = users_col.find_one({'username': username})
+    if not user or not check_password_hash(user.get('password', ''), password):
+        return jsonify({'error': 'invalid credentials'}), 401
+    return jsonify({'message': 'login success', 'username': username}), 200
+
+
+@app.route('/users', methods=['GET'])
+def list_users():
+    if users_col is None:
+        return jsonify({'error': 'Database not available'}), 500
+    users = list(users_col.find({}, {'password': 0}))
+    for u in users:
+        u['_id'] = str(u.get('_id'))
+    return jsonify({'users': users})
+
+
+@app.route('/users/<username>', methods=['DELETE'])
+def delete_user(username):
+    if users_col is None:
+        return jsonify({'error': 'Database not available'}), 500
+    res = users_col.delete_one({'username': username})
+    if res.deleted_count:
+        return jsonify({'message': 'deleted'}), 200
+    return jsonify({'error': 'not found'}), 404
+
 
 if __name__ == '__main__':
     app.run(host='0.0.0.0', port=5000, debug=True)

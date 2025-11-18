@@ -1,5 +1,38 @@
+version: "3.8"
+###########################################
+# Docker Compose - Orchestration des services
+# Ce fichier définit les services, réseaux et volumes
+# utilisés pour lancer l'application en local via Docker.
+###########################################
 services:
+  # -----------------
+  # Base de données MongoDB
+  # - image: version officielle de MongoDB
+  # - ports: expose 27017 pour tests locaux (localhost:27017)
+  # - volumes: persiste les données dans un volume nommé
+  # - environment: initialise la DB par défaut (depuis .env)
+  # - networks: rejoint le réseau interne `app-network`
+  # -----------------
+  mongodb:
+    image: mongo:7
+    container_name: mongodb
+    restart: always
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongodb_data:/data/db
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGO_DB}
+    networks:
+      - app-network
+
+  # -----------------
   # Application Flask (Backend API)
+  # - build: construit l'image depuis le dossier `flask-app`
+  # - ports: mappe le port interne 5000 vers l'hôte (5000)
+  # - depends_on: garantit que MongoDB est démarré avant Flask
+  # - env_file: charge les variables d'environnement depuis `./.env`
+  # -----------------
   flask-app:
     build: ./flask-app
     container_name: flask-app
@@ -8,8 +41,15 @@ services:
     networks:
       - app-network
     restart: unless-stopped
+    depends_on:
+      - mongodb
+    env_file:
+      - .env
 
+  # -----------------
   # Site HTML statique
+  # - image: conteneur nginx qui sert les fichiers statiques montés via un volume
+  # -----------------
   html-app:
     image: nginx:alpine
     container_name: html-app
@@ -19,14 +59,22 @@ services:
       - app-network
     restart: unless-stopped
 
+  # -----------------
   # Nginx Reverse Proxy (Le réceptionniste)
+  # - proxy HTTP public (port 80) qui redirige /api/ vers flask-app
+  #   et /site/ vers html-app. La conf est fournie via volume montage.
+  # - depends_on: s'assure que les backends sont démarrés avant Nginx
+  # -----------------
   nginx:
     image: nginx:alpine
     container_name: nginx-proxy
+    # Expose port 80 (HTTP) sur l'hôte
     ports:
       - "80:80"
     volumes:
+      # Monte la conf Nginx personnalisée pour router /api/ et /site/
       - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+      # Page d'accueil du reverse proxy (optionnel)
       - ./nginx/index.html:/usr/share/nginx/html/index.html:ro
     depends_on:
       - flask-app
@@ -36,5 +84,11 @@ services:
     restart: unless-stopped
 
 networks:
+  # Réseau interne permettant la résolution DNS des services par nom
   app-network:
     driver: bridge
+
+volumes:
+  # Volume nommé pour persister les données MongoDB entre redémarrages
+  mongodb_data:
+    driver: local

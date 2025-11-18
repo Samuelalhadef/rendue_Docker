@@ -1,5 +1,6 @@
 <!DOCTYPE html>
 <html lang="fr">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -26,8 +27,15 @@
         }
 
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(30px); }
-            to { opacity: 1; transform: translateY(0); }
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
         }
 
         .header {
@@ -41,7 +49,7 @@
             font-size: 3.5em;
             color: #e67e22;
             margin-bottom: 10px;
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
             letter-spacing: 3px;
         }
 
@@ -87,7 +95,7 @@
         }
 
         .menu-item {
-            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            background: linear-gradient(135deg, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.05) 100%);
             border: 2px solid rgba(230, 126, 34, 0.3);
             border-radius: 15px;
             padding: 30px;
@@ -200,6 +208,7 @@
         }
     </style>
 </head>
+
 <body>
     <div class="restaurant-container">
         <div class="header">
@@ -265,10 +274,160 @@
             <a href="/api/hello" class="nav-button">🏨 Visiter l'Hôtel API</a>
         </div>
 
+        <div class="specialty" id="auth-section" style="margin-top:20px;">
+            <h3>🔐 Espace Utilisateur</h3>
+            <p style="margin-bottom:15px;">Créez un compte, connectez-vous et voyez la liste des utilisateurs.</p>
+
+            <div id="status" style="margin-bottom:15px;color:#2ecc71;font-weight:700;"></div>
+
+            <div style="display:flex;gap:20px;flex-wrap:wrap;justify-content:center;margin-bottom:20px;">
+                <form id="register-form"
+                    style="background:rgba(255,255,255,0.03);padding:15px;border-radius:10px;min-width:260px;">
+                    <h4 style="color:#f39c12;margin-bottom:10px;">Créer un compte</h4>
+                    <input id="reg-username" placeholder="username" required
+                        style="width:100%;padding:8px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+                    <input id="reg-password" type="password" placeholder="password" required
+                        style="width:100%;padding:8px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+                    <button type="submit" class="nav-button"
+                        style="padding:8px 12px;font-size:0.9em;">S'enregistrer</button>
+                </form>
+
+                <form id="login-form"
+                    style="background:rgba(255,255,255,0.03);padding:15px;border-radius:10px;min-width:260px;">
+                    <h4 style="color:#f39c12;margin-bottom:10px;">Connexion</h4>
+                    <input id="login-username" placeholder="username" required
+                        style="width:100%;padding:8px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+                    <input id="login-password" type="password" placeholder="password" required
+                        style="width:100%;padding:8px;margin-bottom:8px;border-radius:6px;border:1px solid rgba(255,255,255,0.06);">
+                    <button type="submit" class="nav-button" style="padding:8px 12px;font-size:0.9em;">Se
+                        connecter</button>
+                </form>
+            </div>
+
+            <div style="text-align:center;margin-bottom:15px;">
+                <button id="btn-users" class="nav-button" style="background:#1abc9c;">Voir la liste des
+                    utilisateurs</button>
+                <button id="btn-logout" class="nav-button" style="background:#e74c3c;display:none;margin-left:10px;">Se
+                    déconnecter</button>
+            </div>
+
+            <div id="users-list" style="margin-top:15px;display:none;">
+                <h4 style="color:#f39c12;">Utilisateurs enregistrés</h4>
+                <ul id="users-ul" style="list-style:none;padding:0;margin-top:10px;color:#ecf0f1;"></ul>
+            </div>
+        </div>
+
         <div class="footer">
             <p>🍽️ Le Restaurant du Grand Immeuble</p>
             <p><small>Propulsé par Nginx • Conteneurisé avec Docker • Architecture Reverse Proxy</small></p>
         </div>
     </div>
+    <script>
+        // Simple client-side auth state using localStorage
+        const statusEl = document.getElementById('status');
+        const btnLogout = document.getElementById('btn-logout');
+        const btnUsers = document.getElementById('btn-users');
+        const usersListWrap = document.getElementById('users-list');
+        const usersUl = document.getElementById('users-ul');
+
+        function updateStatus() {
+            const user = localStorage.getItem('user');
+            if (user) {
+                statusEl.textContent = `Connecté en tant que ${user}`;
+                btnLogout.style.display = 'inline-block';
+            } else {
+                statusEl.textContent = 'Non connecté';
+                btnLogout.style.display = 'none';
+                usersListWrap.style.display = 'none';
+            }
+        }
+
+        async function registerUser(username, password) {
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const json = await res.json();
+                if (res.status === 201) {
+                    localStorage.setItem('user', username);
+                    updateStatus();
+                    alert('Inscription réussie. Vous êtes connecté.');
+                } else {
+                    alert(json.error || JSON.stringify(json));
+                }
+            } catch (e) {
+                alert('Erreur réseau');
+            }
+        }
+
+        async function loginUser(username, password) {
+            try {
+                const res = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ username, password })
+                });
+                const json = await res.json();
+                if (res.ok) {
+                    localStorage.setItem('user', username);
+                    updateStatus();
+                    alert('Connexion réussie');
+                } else {
+                    alert(json.error || JSON.stringify(json));
+                }
+            } catch (e) {
+                alert('Erreur réseau');
+            }
+        }
+
+        async function fetchUsers() {
+            try {
+                const res = await fetch('/api/users');
+                const json = await res.json();
+                if (res.ok) {
+                    usersUl.innerHTML = '';
+                    (json.users || []).forEach(u => {
+                        const li = document.createElement('li');
+                        li.textContent = u.username + (u._id ? ` (id: ${u._id})` : '');
+                        usersUl.appendChild(li);
+                    });
+                    usersListWrap.style.display = 'block';
+                } else {
+                    alert(json.error || JSON.stringify(json));
+                }
+            } catch (e) {
+                alert('Erreur réseau');
+            }
+        }
+
+        document.getElementById('register-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const u = document.getElementById('reg-username').value.trim();
+            const p = document.getElementById('reg-password').value;
+            if (!u || !p) return alert('username & password requis');
+            registerUser(u, p);
+        });
+
+        document.getElementById('login-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const u = document.getElementById('login-username').value.trim();
+            const p = document.getElementById('login-password').value;
+            if (!u || !p) return alert('username & password requis');
+            loginUser(u, p);
+        });
+
+        btnUsers.addEventListener('click', () => fetchUsers());
+        btnLogout.addEventListener('click', () => {
+            localStorage.removeItem('user');
+            updateStatus();
+            alert('Déconnecté');
+        });
+
+        // initial status
+        updateStatus();
+    </script>
 </body>
+
 </html>
