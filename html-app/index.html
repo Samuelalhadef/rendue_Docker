@@ -1,0 +1,274 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🍽️ Le Restaurant - Étage 1</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Playfair Display', 'Georgia', serif;
+            background: linear-gradient(135deg, #2c3e50 0%, #34495e 100%);
+            min-height: 100vh;
+            color: #ecf0f1;
+            padding: 20px;
+        }
+
+        .restaurant-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            animation: fadeIn 1.2s ease-in;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(30px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .header {
+            text-align: center;
+            padding: 40px 20px;
+            border-bottom: 2px solid #e67e22;
+            margin-bottom: 40px;
+        }
+
+        .header h1 {
+            font-size: 3.5em;
+            color: #e67e22;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            letter-spacing: 3px;
+        }
+
+        .header .subtitle {
+            font-size: 1.3em;
+            color: #f39c12;
+            font-style: italic;
+            margin-top: 10px;
+        }
+
+        .welcome-sign {
+            background: rgba(230, 126, 34, 0.1);
+            border: 3px solid #e67e22;
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            margin-bottom: 40px;
+            backdrop-filter: blur(10px);
+        }
+
+        .welcome-sign .waiter {
+            font-size: 70px;
+            margin-bottom: 15px;
+        }
+
+        .welcome-sign h2 {
+            color: #f39c12;
+            font-size: 2em;
+            margin-bottom: 15px;
+        }
+
+        .welcome-sign p {
+            font-size: 1.2em;
+            line-height: 1.8;
+            color: #ecf0f1;
+        }
+
+        .menu {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 30px;
+            margin: 40px 0;
+        }
+
+        .menu-item {
+            background: linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0.05) 100%);
+            border: 2px solid rgba(230, 126, 34, 0.3);
+            border-radius: 15px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.4s ease;
+            cursor: pointer;
+        }
+
+        .menu-item:hover {
+            transform: translateY(-10px);
+            border-color: #e67e22;
+            box-shadow: 0 15px 40px rgba(230, 126, 34, 0.3);
+            background: linear-gradient(135deg, rgba(230, 126, 34, 0.2) 0%, rgba(243, 156, 18, 0.1) 100%);
+        }
+
+        .menu-item .icon {
+            font-size: 60px;
+            margin-bottom: 20px;
+        }
+
+        .menu-item h3 {
+            color: #e67e22;
+            font-size: 1.8em;
+            margin-bottom: 15px;
+        }
+
+        .menu-item p {
+            color: #bdc3c7;
+            line-height: 1.6;
+            font-size: 1.05em;
+        }
+
+        .specialty {
+            background: rgba(230, 126, 34, 0.15);
+            border: 3px dashed #e67e22;
+            border-radius: 15px;
+            padding: 30px;
+            margin: 40px 0;
+            text-align: center;
+        }
+
+        .specialty h3 {
+            color: #f39c12;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        .specialty .dishes {
+            display: flex;
+            justify-content: space-around;
+            flex-wrap: wrap;
+            gap: 20px;
+            margin-top: 25px;
+        }
+
+        .dish {
+            flex: 1;
+            min-width: 200px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            border: 1px solid rgba(230, 126, 34, 0.2);
+        }
+
+        .dish .dish-icon {
+            font-size: 40px;
+            margin-bottom: 10px;
+        }
+
+        .dish h4 {
+            color: #e67e22;
+            margin-bottom: 10px;
+        }
+
+        .navigation {
+            display: flex;
+            justify-content: center;
+            gap: 20px;
+            margin: 50px 0;
+        }
+
+        .nav-button {
+            background: linear-gradient(135deg, #e67e22 0%, #f39c12 100%);
+            color: white;
+            padding: 15px 35px;
+            text-decoration: none;
+            border-radius: 30px;
+            font-size: 1.1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            box-shadow: 0 5px 15px rgba(230, 126, 34, 0.3);
+        }
+
+        .nav-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(230, 126, 34, 0.5);
+        }
+
+        .footer {
+            text-align: center;
+            padding: 30px;
+            border-top: 2px solid #e67e22;
+            margin-top: 50px;
+            opacity: 0.7;
+        }
+
+        .footer p {
+            color: #95a5a6;
+            font-size: 0.95em;
+        }
+    </style>
+</head>
+<body>
+    <div class="restaurant-container">
+        <div class="header">
+            <h1>🍽️ LE RESTAURANT</h1>
+            <p class="subtitle">Étage 1 - Salle principale du Grand Immeuble</p>
+        </div>
+
+        <div class="welcome-sign">
+            <div class="waiter">👨‍🍳</div>
+            <h2>Bienvenue dans notre établissement !</h2>
+            <p>
+                Notre chef cuisinier vous a préparé une expérience web gastronomique.<br>
+                Vous êtes servi par notre serveur Nginx qui vous a dirigé vers notre restaurant depuis la réception.
+            </p>
+        </div>
+
+        <div class="menu">
+            <div class="menu-item">
+                <div class="icon">📄</div>
+                <h3>HTML Pur</h3>
+                <p>Ingrédients frais et naturels, sans additifs JavaScript. Goût authentique garanti.</p>
+            </div>
+
+            <div class="menu-item">
+                <div class="icon">🎨</div>
+                <h3>CSS Artisanal</h3>
+                <p>Présenté avec soin, chaque style est créé à la main pour une expérience visuelle unique.</p>
+            </div>
+
+            <div class="menu-item">
+                <div class="icon">⚡</div>
+                <h3>Service Rapide</h3>
+                <p>Servi instantanément grâce à notre cuisine statique. Pas d'attente, pas de cuisson !</p>
+            </div>
+        </div>
+
+        <div class="specialty">
+            <h3>✨ Notre Spécialité du Jour ✨</h3>
+            <p style="color: #ecf0f1; margin-bottom: 20px;">
+                Le site web statique servi via le reverse proxy Nginx
+            </p>
+            <div class="dishes">
+                <div class="dish">
+                    <div class="dish-icon">🌐</div>
+                    <h4>Page Statique</h4>
+                    <p>Servie à la perfection par notre conteneur Nginx Alpine</p>
+                </div>
+                <div class="dish">
+                    <div class="dish-icon">🔀</div>
+                    <h4>Route /site/</h4>
+                    <p>Le réceptionniste vous a guidé jusqu'ici via le chemin /site/</p>
+                </div>
+                <div class="dish">
+                    <div class="dish-icon">🐳</div>
+                    <h4>Docker Fresh</h4>
+                    <p>Conteneurisé pour une fraîcheur optimale</p>
+                </div>
+            </div>
+        </div>
+
+        <div class="navigation">
+            <a href="/" class="nav-button">🏢 Retour au Hall</a>
+            <a href="/api/hello" class="nav-button">🏨 Visiter l'Hôtel API</a>
+        </div>
+
+        <div class="footer">
+            <p>🍽️ Le Restaurant du Grand Immeuble</p>
+            <p><small>Propulsé par Nginx • Conteneurisé avec Docker • Architecture Reverse Proxy</small></p>
+        </div>
+    </div>
+</body>
+</html>
